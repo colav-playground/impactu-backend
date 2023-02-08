@@ -33,19 +33,35 @@ class ImpactuSearchApi(HunabkuPluginBase):
             if "affiliations" in author.keys():
                 if len(author["affiliations"])>0:
                     for aff in author["affiliations"]:
+                        if not "names" in aff.keys():
+                            continue
                         if "types" in aff.keys():
                             for typ in aff["types"]: 
                                 if typ["type"]=="group":
                                     if not str(aff["id"]) in groups_ids:
                                         groups_ids.append(str(aff["id"]))
+                                        name=""
+                                        for n in aff["names"]:
+                                            if n["lang"]=="es":
+                                                name=n["name"]
+                                                break
+                                            elif n["lang"]=="en":
+                                                name=n["name"]
                                         group_filters.append({
                                             "id":str(aff["id"]),
-                                            "name":aff["name"]
+                                            "name":name
                                         })
                                 else:
                                     if not str(aff["id"]) in institution_ids:
                                         institution_ids.append(str(aff["id"]))
-                                        entry = {"id":str(aff["id"]),"name":aff["name"]}
+                                        name=""
+                                        for n in aff["names"]:
+                                            if n["lang"]=="es":
+                                                name=n["name"]
+                                                break
+                                            elif n["lang"]=="en":
+                                                name=n["name"]
+                                        entry = {"id":str(aff["id"]),"name":name}
                                         institution_filters.append(entry)
 
 
@@ -53,7 +69,7 @@ class ImpactuSearchApi(HunabkuPluginBase):
         cursor.sort([("score", { "$meta": "textScore" } )])
 
 
-        total=cursor.count()
+        total=self.colav_db["person"].count_documents(search_dict)
         if not page:
             page=1
         else:
@@ -82,33 +98,24 @@ class ImpactuSearchApi(HunabkuPluginBase):
                 entry={
                     "id":author["_id"],
                     "name":author["full_name"],
-                    "affiliation":{"institution":{"name":"","id":""}}
+                    "affiliations":[]
                 }
-                if "affiliations" in author.keys():
-                    if len(author["affiliations"])>0:
-                        for aff in author["affiliations"]:
-                            if "types" in aff.keys():
-                                for typ in aff["types"]:
-                                    if typ["type"]=="group":
-                                        if groups:
-                                            if aff["id"] in aff_list:
-                                                entry["affiliation"]["group"]={
-                                                    "name":aff["name"],
-                                                    "id":aff["id"]
-                                                }
-                                        else:
-                                            entry["affiliation"]["group"]={
-                                                "name":aff["name"],
-                                                "id":aff["id"]
-                                            }
-                                    else:
-                                        if institutions:
-                                            if aff["id"] in aff_list:
-                                                entry["affiliation"]["institution"]["name"]=aff["name"]
-                                                entry["affiliation"]["institution"]["id"]  =aff["id"]
-                                        else:    
-                                            entry["affiliation"]["institution"]["name"]=aff["name"]
-                                            entry["affiliation"]["institution"]["id"]  =aff["id"]
+                for aff in author["affiliations"]:
+                    if not "names" in aff.keys():
+                        continue
+                    name=""
+                    lang=""
+                    for n in aff["names"]:
+                        if n["lang"]=="es":
+                            name=n["name"]
+                            lang=n["lang"]
+                            break
+                        elif n["lang"]=="en":
+                            name=n["name"]
+                            lang=n["lang"]
+                    del(aff["names"])
+                    aff["names"]=[{"name":name,"lang":lang}]
+                    entry["affiliations"].append(aff)
 
                 author_list.append(entry)
     
@@ -135,7 +142,7 @@ class ImpactuSearchApi(HunabkuPluginBase):
             sort = self.request.args.get('sort') if "sort" in self.request.args else "citations"
             groups = self.request.args.get('groups') if "groups" in self.request.args else None
             institutions = self.request.args.get('institutions') if "institutions" in self.request.args else None
-            result=self.search_author(keywords=keywords,max_results=max_results,page=page,sort=sort,
+            result=self.search_person(keywords=keywords,max_results=max_results,page=page,sort=sort,
                 groups=groups,institutions=institutions)
         else:
             result=None
