@@ -78,7 +78,7 @@ class HunabkuPluginBase:
         """
         self.dburi = hunabku.dburi
         self.dbclient = hunabku.dbclient
-        self.colav_db = sds.colav_db
+        self.colav_db = hunabku.colav_db
         self.ip = hunabku.ip
         self.port = hunabku.port
         self.info_level = hunabku.info_level
