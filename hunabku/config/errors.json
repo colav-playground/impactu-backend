@@ -1,0 +1,7 @@
+{"401": {"msg": "The HTTP 401 Unauthorized invalid authentication apikey for the target resource."}, 
+"4220": {"msg": "Unprocessable entity Captcha"}, 
+"4221": {"msg": "Unprocessable entity GSLookUp empty page"}, 
+"4222": {"msg": "Unprocessable entity GSCite empty page"}, 
+"4223": {"msg": "Unprocessable entity GSQuery empty page"}, 
+"4224": {"msg": "Unprocessable entity Bibtex"}
+}

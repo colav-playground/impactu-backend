@@ -1,0 +1,11 @@
+{
+  "name": "colav-apidoc",
+  "version": "0.0.1",
+  "description": "Colav API Documentation",
+  "title": "Colav APIDoc",
+  "url" : "http://clustercien.udea.edu.co:8080/apidoc",
+  "sampleUrl" : "http://clustercien.udea.edu.co:8080/",
+  "header": {
+    "filename": "hunabku/config/apidoc-header.md"
+  }
+}

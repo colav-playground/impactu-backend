@@ -1,0 +1,29 @@
+#!/usr/bin/env python3
+
+from PDBServer.PDBLoader import PDBLoader
+import argparse
+
+parser = argparse.ArgumentParser(description='Process some integers.')
+parser.add_argument('--db', type=str, default='colav',
+                    help='database name (default colav)')
+parser.add_argument(
+    '--dburi',
+    type=str,
+    default='mongodb://localhost:27017/',
+    help='mongodb server (default mongodb://localhost:27017/)')
+parser.add_argument(
+    '--collection',
+    type=str,
+    required=True,
+    help='collection name to load the data (ex: redalyc , prefix data_ will be added)')
+parser.add_argument(
+    '--filename',
+    type=str,
+    required=True,
+    help='data file to load ')
+
+args = parser.parse_args()
+
+if __name__ == '__main__':
+    loader = PDBLoader(dbname=args.db, dburi=args.dburi)
+    loader.load(filename=args.filename, dbcollection=args.collection)

@@ -1,0 +1,1 @@
+{"name": "colav-apidoc", "version": "0.0.7-alpha", "description": "Colav API Documentation", "title": "Colav APIDoc", "url": "http://127.0.1.1:9090/apidoc", "sampleUrl": "http://127.0.1.1:9090", "header": {"filename": "hunabku_website/config/apidoc-header.md"}}
