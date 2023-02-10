@@ -34,6 +34,7 @@ class ImpactuSearchApi(HunabkuPluginBase):
                 if len(author["affiliations"])>0:
                     for aff in author["affiliations"]:
                         if not "names" in aff.keys():
+                            print("Author {} has no names in aff".format(author["_id"]))
                             continue
                         if "types" in aff.keys():
                             for typ in aff["types"]: 
@@ -95,13 +96,12 @@ class ImpactuSearchApi(HunabkuPluginBase):
             group_name = ""
             group_id = ""
             for author in cursor:
-                entry={
-                    "id":author["_id"],
-                    "name":author["full_name"],
-                    "affiliations":[]
-                }
+                entry=author.copy()
+                del(entry["_id"])
+                entry["affiliations"]=[]
                 for aff in author["affiliations"]:
                     if not "names" in aff.keys():
+                        print("Author {} has no names in aff".format(author["_id"]))
                         continue
                     name=""
                     lang=""
@@ -123,8 +123,82 @@ class ImpactuSearchApi(HunabkuPluginBase):
                     "total_results":total,
                     "count":len(author_list),
                     "page":page,
-                    "filters":{"institutions":institution_filters,"groups":group_filters},
+                    #"filters":{"institutions":institution_filters,"groups":group_filters},
                     "data":author_list
+                }
+        else:
+            return None
+
+    def search_affiliations(self,keywords="",max_results=100,page=1,sort='citations',aff_type=None):
+        if aff_type==None:
+            search_dict={}
+        else:
+            search_dict={"types.type":aff_type}
+
+        if keywords:
+            search_dict["$text"]={"$search":keywords}
+
+        cursor=self.colav_db['affiliations'].find(search_dict,{"score":{"$meta":"textScore"}})
+        
+        cursor.sort([("score", { "$meta": "textScore" } )])
+
+        total=self.colav_db['affiliations'].count_documents(search_dict)
+
+        if not page:
+            page=1
+        else:
+            try:
+                page=int(page)
+            except:
+                print("Could not convert end page to int")
+                return None
+        if not max_results:
+            max_results=100
+        else:
+            try:
+                max_results=int(max_results)
+            except:
+                print("Could not convert end max to int")
+                return None
+
+        cursor=cursor.skip(max_results*(page-1)).limit(max_results)
+        if cursor:
+            affiliation_list=[]
+            for affiliation in cursor:
+                entry=affiliation.copy()
+                del(entry["names"])
+                del(entry["relations"])
+                entry["relations"]=[]
+                name=affiliation["names"][0]["name"]
+                for n in affiliation["names"]:
+                    if n["lang"]=="es":
+                        name=n["name"]
+                        break
+                    if n["lang"]=="en":
+                        name=n["name"]
+
+                entry["name"]=name
+                for rel in affiliation["relations"]:
+                    rel_entry=rel.copy()
+                    del(rel_entry["names"])
+                    name=rel["names"][0]["name"]
+                    for n in rel["names"]:
+                        if n["lang"]=="es":
+                            name=n["name"]
+                            break
+                        if n["lang"]=="en":
+                            name=n["name"]
+                    rel_entry["name"]=name
+                    entry["relations"].append(rel_entry)
+
+                affiliation_list.append(entry)
+    
+            return {
+                    "total_results":total,
+                    "count":len(affiliation_list),
+                    "page":page,
+                    "data":affiliation_list
+
                 }
         else:
             return None
@@ -132,6 +206,7 @@ class ImpactuSearchApi(HunabkuPluginBase):
     @endpoint('/api/search', methods=['GET'])
     def api_search(self):
         data = self.request.args.get('data')
+    
         if not self.valid_apikey():
             return self.apikey_error()
 
@@ -144,6 +219,16 @@ class ImpactuSearchApi(HunabkuPluginBase):
             institutions = self.request.args.get('institutions') if "institutions" in self.request.args else None
             result=self.search_person(keywords=keywords,max_results=max_results,page=page,sort=sort,
                 groups=groups,institutions=institutions)
+        elif data=="affiliations":
+            max_results=self.request.args.get('max') if 'max' in self.request.args else 100
+            page=self.request.args.get('page') if 'page' in self.request.args else 1
+            keywords = self.request.args.get('keywords') if "keywords" in self.request.args else ""
+            sort = self.request.args.get('sort') if "sort" in self.request.args else "citations"
+            aff_type = self.request.args.get('type')
+            if aff_type:
+                result=self.search_affiliations(keywords=keywords,aff_type=aff_type,max_results=max_results,page=page,sort=sort)
+            else:
+                result=self.search_affiliations(keywords=keywords,max_results=max_results,page=page,sort=sort)
         else:
             result=None
 
