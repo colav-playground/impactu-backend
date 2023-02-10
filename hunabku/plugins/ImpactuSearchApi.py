@@ -6,6 +6,59 @@ class ImpactuSearchApi(HunabkuPluginBase):
     def __init__(self, hunabku):
         super().__init__(hunabku)
 
+    def search_subjects(self,keywords='',max_results=100,page=1,sort="products",direction="descending"):
+        search_dict={}
+        if keywords:
+            search_dict["$text"]={"$search":keywords}
+        
+        cursor=self.colav_db["subjects"].find(search_dict,{"score":{"$meta":"textScore"}})
+
+        total=self.colav_db["subjects"].count_documents(search_dict)
+        if not page:
+            page=1
+        else:
+            try:
+                page=int(page)
+            except:
+                print("Could not convert end page to int")
+                return None
+        if not max_results:
+            max_results=100
+        else:
+            try:
+                max_results=int(max_results)
+            except:
+                print("Could not convert end max to int")
+                return None
+
+        cursor=cursor.skip(max_results*(page-1)).limit(max_results)
+
+        if cursor:
+            subjects_list=[]
+            for subject in cursor:
+                entry=subject.copy()
+                del(entry["names"])
+                name=""
+                for n in subject["names"]:
+                    if n["lang"]=="es":
+                        name=n["name"]
+                        break
+                    elif n["lang"]=="en":
+                        name=n["name"]
+                entry["name"]=name
+                subjects_list.append(entry)
+
+            return {
+                    "total_results":total,
+                    "count":len(subjects_list),
+                    "page":page,
+                    #"filters":{},
+                    "data":subjects_list
+                }
+
+        else:
+            return None
+
     def search_person(self,keywords="",institutions="",groups="",country="",max_results=100,page=1,sort="citations"):
         search_dict={"external_ids":{"$ne":[]}}
         aff_list=[]
@@ -229,6 +282,13 @@ class ImpactuSearchApi(HunabkuPluginBase):
                 result=self.search_affiliations(keywords=keywords,aff_type=aff_type,max_results=max_results,page=page,sort=sort)
             else:
                 result=self.search_affiliations(keywords=keywords,max_results=max_results,page=page,sort=sort)
+        elif data=="subjects":
+            max_results=self.request.args.get('max') if 'max' in self.request.args else 100
+            page=self.request.args.get('page') if 'page' in self.request.args else 1
+            keywords = self.request.args.get('keywords') if "keywords" in self.request.args else ""
+            sort=self.request.args.get('sort')
+            result=self.search_subjects(keywords=keywords,max_results=max_results,
+                page=page,sort=sort,direction="descending")
         else:
             result=None
 
