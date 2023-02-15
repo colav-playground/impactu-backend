@@ -97,14 +97,18 @@ class ImpactuPersonApi(HunabkuPluginBase):
                     }
                 authors=[]
                 for author in paper["authors"]:
-                    au_entry=author
+                    au_entry=author.copy()
                     if not "affiliations" in au_entry.keys():
                         au_entry["affiliations"]=[]
                     author_db=None
                     if "id" in author.keys():
                         author_db=self.colav_db["person"].find_one({"_id":author["id"]})
                     if author_db:
-                        au_entry=author_db
+                        au_entry={
+                            "id":author_db["_id"],
+                            "full_name":author_db["full_name"],
+                            "ranking":author_db["ranking"]
+                        }
                     affiliations=[]
                     for aff in author["affiliations"]:
                         if not "names" in aff.keys():
