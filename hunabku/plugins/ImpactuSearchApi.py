@@ -150,7 +150,6 @@ class ImpactuSearchApi(HunabkuPluginBase):
             group_id = ""
             for author in cursor:
                 entry=author.copy()
-                del(entry["_id"])
                 entry["affiliations"]=[]
                 for aff in author["affiliations"]:
                     if not "names" in aff.keys():
