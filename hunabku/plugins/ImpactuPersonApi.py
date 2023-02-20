@@ -115,16 +115,17 @@ class ImpactuPersonApi(HunabkuPluginBase):
                             if "id" in author.keys():
                                 print("Author {} has no names in aff".format(author["id"]))
                             continue
-                        name=""
+                        name=aff["names"][0]["name"]
                         lang=""
                         for n in aff["names"]:
-                            if n["lang"]=="es":
-                                name=n["name"]
-                                lang=n["lang"]
-                                break
-                            elif n["lang"]=="en":
-                                name=n["name"]
-                                lang=n["lang"]
+                            if "lang" in n.keys():
+                                if n["lang"]=="es":
+                                    name=n["name"]
+                                    lang=n["lang"]
+                                    break
+                                elif n["lang"]=="en":
+                                    name=n["name"]
+                                    lang=n["lang"]
                         del(aff["names"])
                         aff["names"]=[{"name":name,"lang":lang}]
                         affiliations.append(aff)
@@ -151,16 +152,17 @@ class ImpactuPersonApi(HunabkuPluginBase):
                 if not "names" in aff.keys():
                     print("Author {} has no names in aff".format(author["_id"]))
                     continue
-                name=""
+                name=aff["names"][0]["name"]
                 lang=""
                 for n in aff["names"]:
-                    if n["lang"]=="es":
-                        name=n["name"]
-                        lang=n["lang"]
-                        break
-                    elif n["lang"]=="en":
-                        name=n["name"]
-                        lang=n["lang"]
+                    if "lang" in n.keys():
+                        if n["lang"]=="es":
+                            name=n["name"]
+                            lang=n["lang"]
+                            break
+                        elif n["lang"]=="en":
+                            name=n["name"]
+                            lang=n["lang"]
                 del(aff["names"])
                 aff["names"]=[{"name":name,"lang":lang}]
                 entry["affiliations"].append(aff)
