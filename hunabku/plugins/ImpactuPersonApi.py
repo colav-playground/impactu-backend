@@ -84,7 +84,9 @@ class ImpactuPersonApi(HunabkuPluginBase):
                         sub["names"]=[{"name":name,"lang":lang}]
                         sub_entry["subjects"].append(sub)
                     subjects.append(sub_entry)
-                source=self.colav_db["sources"].find_one({"_id":paper["source"]["id"]})
+                source=None
+                if "id" in paper["source"].keys():
+                    source=self.colav_db["sources"].find_one({"_id":paper["source"]["id"]})
                 if source:
                     entry["source"]={
                         "id":source["_id"],
@@ -94,6 +96,8 @@ class ImpactuPersonApi(HunabkuPluginBase):
                         "apc":source["apc"],
                         "waiver":source["waiver"]
                     }
+                else:
+                    entry["source"]={}
                 authors=[]
                 for author in paper["authors"]:
                     au_entry=author.copy()
@@ -108,7 +112,7 @@ class ImpactuPersonApi(HunabkuPluginBase):
                             "full_name":author_db["full_name"],
                             "first_names":author_db["first_names"],
                             "last_names":author_db["last_names"],
-                            "external_ids":author_db["external_ids"],
+                            "external_ids":[ext for ext in author_db["external_ids"] if not ext["source"] in ["Cédula de Ciudadanía","Cédula de Extranjería"]],
                             "ranking":author_db["ranking"],
                             "sex":author_db["sex"]
                         }

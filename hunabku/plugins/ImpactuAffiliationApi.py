@@ -112,7 +112,7 @@ class ImpactuAffiliationApi(HunabkuPluginBase):
                             "full_name":author_db["full_name"],
                             "first_names":author_db["first_names"],
                             "last_names":author_db["last_names"],
-                            "external_ids":author_db["external_ids"],
+                            "external_ids":[ext for ext in author_db["external_ids"] if not ext["source"] in ["Cédula de Ciudadanía","Cédula de Extranjería"]],
                             "ranking":author_db["ranking"],
                             "sex":author_db["sex"]
                         }
