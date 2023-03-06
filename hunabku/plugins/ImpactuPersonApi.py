@@ -117,6 +117,7 @@ class ImpactuPersonApi(HunabkuPluginBase):
                             "sex":author_db["sex"]
                         }
                     affiliations=[]
+                    aff_ids=[]
                     for aff in author["affiliations"]:
                         if not "names" in aff.keys():
                             if "id" in author.keys():
@@ -126,12 +127,63 @@ class ImpactuPersonApi(HunabkuPluginBase):
                             if aff["id"]:
                                 aff_db=self.colav_db["affiliations"].find_one({"_id":aff["id"]})
                                 if aff_db:
+                                    aff_ids.append(aff["id"])
                                     aff_entry={
                                         "id":aff_db["_id"],
                                         "names":[],
                                         "external_ids":aff_db["external_ids"],
-                                        "types":aff_db["types"]
+                                        "types":aff_db["types"],
+                                        "addresses":aff_db["addresses"],
+                                        "start_date":None,
+                                        "end_date":None
                                     }
+                                    if author_db:
+                                        for aff_au in author_db["affiliations"]:
+                                            if aff_au["id"]==aff["id"]:
+                                                if "start_date" in aff_au.keys():
+                                                    aff_entry["start_date"]=aff_au["start_date"]
+                                                if "end_date" in aff_au.keys():
+                                                    aff_entry["end_date"]=aff_au["end_date"]
+                                                break
+                                    name=aff_db["names"][0]["name"]
+                                    lang=""
+                                    for n in aff_db["names"]:
+                                        if "lang" in n.keys():
+                                            if n["lang"]=="es":
+                                                name=n["name"]
+                                                lang=n["lang"]
+                                                break
+                                            elif n["lang"]=="en":
+                                                name=n["name"]
+                                                lang=n["lang"]
+                                    del(aff["names"])
+                                    aff["names"]=[{"name":name,"lang":lang}]
+                                    affiliations.append(aff)
+                    if author_db:
+                        for aff in author_db["affiliations"]:
+                            if aff["id"] in aff_ids:
+                                continue
+                            if aff["id"]:
+                                aff_db=self.colav_db["affiliations"].find_one({"_id":aff["id"]})
+                                if aff_db:
+                                    aff_ids.append(aff["id"])
+                                    aff_entry={
+                                        "id":aff_db["_id"],
+                                        "names":[],
+                                        "external_ids":aff_db["external_ids"],
+                                        "types":aff_db["types"],
+                                        "addresses":aff_db["addresses"],
+                                        "start_date":None,
+                                        "end_date":None
+                                    }
+                                    if author_db:
+                                        for aff_au in author_db["affiliations"]:
+                                            if aff_au["id"]==aff["id"]:
+                                                if "start_date" in aff_au.keys():
+                                                    aff_entry["start_date"]=aff_au["start_date"]
+                                                if "end_date" in aff_au.keys():
+                                                    aff_entry["end_date"]=aff_au["end_date"]
+                                                break
                                     name=aff_db["names"][0]["name"]
                                     lang=""
                                     for n in aff_db["names"]:
