@@ -118,6 +118,7 @@ class ImpactuAffiliationApi(HunabkuPluginBase):
                         }
                     affiliations=[]
                     aff_ids=[]
+                    aff_types=[]
                     for aff in author["affiliations"]:
                         if not "names" in aff.keys():
                             if "id" in author.keys():
@@ -158,6 +159,11 @@ class ImpactuAffiliationApi(HunabkuPluginBase):
                                                 lang=n["lang"]
                                     del(aff["names"])
                                     aff["names"]=[{"name":name,"lang":lang}]
+                                    if "types" in aff.keys():
+                                        for typ in aff["types"]:
+                                            if "type" in typ.keys():
+                                                if not typ["type"] in aff_types:
+                                                    aff_types.append(typ["type"])
                                     affiliations.append(aff)
                     if author_db:
                         for aff in author_db["affiliations"]:
@@ -165,7 +171,15 @@ class ImpactuAffiliationApi(HunabkuPluginBase):
                                 continue
                             if aff["id"]:
                                 aff_db=self.colav_db["affiliations"].find_one({"_id":aff["id"]})
+                                inst_already=False
                                 if aff_db:
+                                    if "types" in aff_db.keys():
+                                        for typ in aff_db["types"]:
+                                            if "type" in typ.keys():
+                                                if typ["type"] in aff_types:
+                                                    inst_already=True
+                                    if inst_already:
+                                        continue
                                     aff_ids.append(aff["id"])
                                     aff_entry={
                                         "id":aff_db["_id"],
